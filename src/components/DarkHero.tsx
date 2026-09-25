@@ -58,6 +58,17 @@ export default function DarkHero() {
       }
     };
 
+    const kick = () => {
+      media.muted = true;
+      media.defaultMuted = true;
+      media.playsInline = true;
+      media.setAttribute("muted", "");
+      media.setAttribute("playsinline", "true");
+      media.setAttribute("webkit-playsinline", "true");
+      const attempt = media.play();
+      if (attempt) attempt.catch(() => {});
+    };
+
     const apply = () => {
       const total = Math.max(1, track.offsetHeight - window.innerHeight);
       const p = clamp(-track.getBoundingClientRect().top / total, 0, 1);
@@ -66,6 +77,7 @@ export default function DarkHero() {
 
       scrubLayer(wrap, videoT, media);
       wrap.style.filter = "none";
+      if (videoT < 0.001) wrap.style.transform = "none";
       scrubLayer(ice, iceT);
 
       overlay.style.opacity = String(1 - clamp(videoT * 1.55, 0, 1));
@@ -81,11 +93,20 @@ export default function DarkHero() {
     };
 
     apply();
+    kick();
+    media.addEventListener("loadeddata", kick);
+    media.addEventListener("canplay", kick);
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", apply);
+    window.addEventListener("touchstart", kick, { passive: true });
+    window.addEventListener("pointerdown", kick);
     return () => {
+      media.removeEventListener("loadeddata", kick);
+      media.removeEventListener("canplay", kick);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", apply);
+      window.removeEventListener("touchstart", kick);
+      window.removeEventListener("pointerdown", kick);
       if (frame) window.cancelAnimationFrame(frame);
     };
   }, []);
@@ -113,7 +134,7 @@ export default function DarkHero() {
         <div
           ref={videoRef}
           id="video-hero"
-          className="absolute inset-0 z-20 origin-center will-change-transform pointer-events-none"
+          className="absolute inset-0 z-20 origin-center pointer-events-none"
         >
           <video
             ref={mediaRef}
@@ -122,6 +143,7 @@ export default function DarkHero() {
             loop
             muted
             playsInline
+            preload="auto"
             src={VIDEO_SRC}
           />
         </div>
