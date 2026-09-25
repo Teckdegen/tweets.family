@@ -16,7 +16,7 @@ const readexPro = Readex_Pro({
 });
 
 export const metadata: Metadata = {
-  title: "tweets.family",
+  title: "tweets.cc",
   description:
     "Don't bet yes or no. Bet how many X a tweet's engagement goes.",
 };

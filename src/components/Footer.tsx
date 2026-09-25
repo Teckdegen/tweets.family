@@ -48,11 +48,11 @@ export default function Footer() {
         <div className="relative z-10 flex h-full min-h-[280px] flex-col justify-between gap-12 px-8 py-10 sm:min-h-[340px] sm:px-12 sm:py-12 md:min-h-[380px] md:flex-row md:items-center md:px-16 lg:px-20">
           <div>
             <p className="inline-block bg-[#2F6BFF] px-4 py-1.5 text-[42px] leading-none font-black tracking-[-0.06em] text-white italic sm:px-5 sm:py-2 sm:text-[56px] md:text-[64px]">
-              tweets.family
+              tweets.cc
             </p>
             <div className="mt-4">
               <p className="inline-block bg-[#2F6BFF] px-2.5 py-1 text-[13px] text-white sm:text-[14px]">
-                © 2026 tweets.family
+                © 2026 tweets.cc
               </p>
             </div>
           </div>

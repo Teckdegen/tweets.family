@@ -27,7 +27,7 @@ function FamilyMark({ className }: { className?: string }) {
     <span
       className={`font-bold tracking-[-0.04em] text-[#4ec3dc] italic ${className ?? ""}`}
     >
-      tweets.family
+      tweets.cc
     </span>
   );
 }
@@ -131,7 +131,7 @@ function CardChat() {
               viral
             </span>
             <span className="rounded-full bg-[#e8f6ff] px-2 py-[2px] text-[10px] font-semibold text-[#3aa0d6]">
-              tweets.family
+              tweets.cc
             </span>
           </div>
         </div>
@@ -274,7 +274,7 @@ export default function HowItWorks() {
           <h2 className="max-w-[460px] text-[34px] leading-[1.15] font-bold tracking-[-0.03em] text-[#1b1b1b] sm:text-[42px]">
             Paste the post. <ChatIcon />
             <br />
-            tweets.family does the rest.
+            tweets.cc does the rest.
           </h2>
           <div className="max-w-[280px] md:text-right">
             <p className="text-[13px] leading-5 text-[#8b9aa1]">

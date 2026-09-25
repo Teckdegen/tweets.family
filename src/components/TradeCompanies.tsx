@@ -64,7 +64,7 @@ export default function TradeCompanies({ fill = false }: { fill?: boolean }) {
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="tweets.family, how many X does this go?"
+            placeholder="tweets.cc, how many X does this go?"
             className="hero-glass h-[52px] flex-1 rounded-full px-5 text-[15px] text-white outline-none placeholder:text-white/80 sm:h-[56px] sm:px-6 sm:text-[16px]"
           />
         </div>
