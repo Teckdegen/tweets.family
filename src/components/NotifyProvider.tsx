@@ -10,6 +10,7 @@ import {
   useState,
 } from "react";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { POSTS } from "@/data/posts";
 
 type Tone = "slate" | "ice" | "mint" | "gold" | "pink" | "white" | "navy";
@@ -140,7 +141,8 @@ export function useNotify() {
 
 export function NotifyProvider({ children }: { children: React.ReactNode }) {
   const [notes, setNotes] = useState<Note[]>([]);
-  const [show, setShow] = useState(true);
+  // the ambient pop-ups belong to the landing page only
+  const show = usePathname() === "/";
   const idRef = useRef(0);
 
   const notify = useCallback((note: Payload) => {
@@ -163,10 +165,8 @@ export function NotifyProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!show) {
-      setNotes([]);
-      return;
-    }
+    // hidden pages render no notes (see below), so there's nothing to clear
+    if (!show) return;
     notify(autoNote());
     notify(autoNote());
     const timer = window.setInterval(() => {

@@ -4,6 +4,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 import MiniPost from "@/components/MiniPost";
 import { POSTS, type Multiplier, type Post } from "@/data/posts";
 import { useNotify } from "@/components/NotifyProvider";
+import { smoothPath } from "@/lib/chart";
 
 const CHARTS: Record<string, number[]> = {
   "@nova": [6.1, 6.4, 5.9, 7.2, 6.8, 8.1, 7.4, 9.0, 8.3, 10.2, 9.6, 11.4, 10.8, 12.6, 11.9, 13.4, 12.8, 14.1, 13.6, 14.8, 14.2, 15.1, 14.9, 15.2],
@@ -12,23 +13,6 @@ const CHARTS: Record<string, number[]> = {
   "@rio": [8.2, 8.8, 8.1, 9.6, 9.2, 11.0, 10.4, 12.8, 12.1, 14.6, 13.8, 16.4, 15.7, 18.2, 17.4, 20.1, 19.2, 22.0, 21.1, 23.4, 22.8, 24.6, 24.1, 25.0],
   "@kai": [3.8, 3.9, 3.7, 4.1, 4.0, 4.3, 4.1, 4.5, 4.3, 4.6, 4.4, 4.7, 4.6, 4.9, 4.7, 5.0, 4.8, 5.1, 5.0, 5.2, 5.1, 5.3, 5.2, 5.0],
 };
-
-function smoothPath(points: [number, number][]) {
-  if (points.length < 2) return "";
-  let d = `M ${points[0][0].toFixed(1)} ${points[0][1].toFixed(1)}`;
-  for (let i = 0; i < points.length - 1; i++) {
-    const p0 = points[i - 1] ?? points[i];
-    const p1 = points[i];
-    const p2 = points[i + 1];
-    const p3 = points[i + 2] ?? p2;
-    const c1x = p1[0] + (p2[0] - p0[0]) / 6;
-    const c1y = p1[1] + (p2[1] - p0[1]) / 6;
-    const c2x = p2[0] - (p3[0] - p1[0]) / 6;
-    const c2y = p2[1] - (p3[1] - p1[1]) / 6;
-    d += ` C ${c1x.toFixed(1)} ${c1y.toFixed(1)}, ${c2x.toFixed(1)} ${c2y.toFixed(1)}, ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
-  }
-  return d;
-}
 
 function Sparkline({ post }: { post: Post }) {
   const values = CHARTS[post.handle] ?? CHARTS["@nova"];

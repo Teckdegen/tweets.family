@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    // X profile pictures and banners
+    remotePatterns: [{ protocol: "https", hostname: "pbs.twimg.com" }],
+  },
 };
 
 export default nextConfig;

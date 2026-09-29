@@ -3,7 +3,16 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { createClient } from "@supabase/supabase-js";
 import { createHmac } from "node:crypto";
-import { Contract, JsonRpcProvider, Wallet, formatUnits } from "ethers";
+import {
+  Contract,
+  JsonRpcProvider,
+  Wallet,
+  dataSlice,
+  formatUnits,
+  getAddress,
+  id as keccakId,
+  zeroPadValue,
+} from "ethers";
 
 const API = "https://api.x.com/2";
 const CLOCKS = [5, 15, 30];
@@ -44,9 +53,14 @@ function cfg() {
       .filter(Boolean),
     chainId: Number(process.env.CHAIN_ID || 4663),
     rpcUrl: process.env.ROBINHOOD_RPC_URL || "https://rpc.mainnet.chain.robinhood.com",
-    usdc: process.env.USDC_ADDRESS || "0x378F906eAD242F0C3aa9ed45AA07612A2C088030",
-    usdcDecimals: Number(process.env.USDC_DECIMALS || 6),
+    // the stablecoin users bet with (USDG). the `usdc` names below are historical
+    usdc: process.env.TOKEN_ADDRESS || process.env.USDC_ADDRESS || "",
+    usdcDecimals: Number(process.env.TOKEN_DECIMALS || process.env.USDC_DECIMALS || 6),
+    tokenSymbol: process.env.TOKEN_SYMBOL || "USDG",
     houseKey: process.env.HOUSE_PRIVATE_KEY || "",
+    // first block to scan for deposits/withdrawals on the very first run (default: current block)
+    eventsStartBlock: process.env.EVENTS_START_BLOCK ? Number(process.env.EVENTS_START_BLOCK) : null,
+    logChunk: Number(process.env.LOG_CHUNK || 2000),
   };
 }
 
@@ -239,14 +253,19 @@ function createX(config) {
       });
       return request(`${API}/users/by?${query}`);
     },
+    // full profile for the website: name, bio, avatar, banner, follower counts, verified.
+    // profile_banner_url isn't available on every API tier, so retry without it if X rejects it
     async usersByIds(ids) {
       const list = [...new Set(ids.filter(Boolean))].slice(0, 100);
       if (!list.length) return { data: [] };
-      const query = new URLSearchParams({
-        ids: list.join(","),
-        "user.fields": "id,username,name,profile_image_url",
-      });
-      return request(`${API}/users?${query}`);
+      const base = "id,username,name,description,profile_image_url,public_metrics,verified";
+      const lookup = (fields) =>
+        request(`${API}/users?${new URLSearchParams({ ids: list.join(","), "user.fields": fields })}`);
+      try {
+        return await lookup(`${base},profile_banner_url`);
+      } catch {
+        return lookup(base);
+      }
     },
     reply(text, replyToId) {
       return request(`${API}/tweets`, {
@@ -325,8 +344,8 @@ async function usdcBalance(address) {
   return Number(formatUnits(await usdcOf(provider).balanceOf(address), config.usdcDecimals));
 }
 
-// Sends USDC from a user's wallet. The house tops the wallet up with ETH first so
-// users only ever need to hold USDC.
+// Sends the token from a user's wallet. The house tops the wallet up with ETH first so
+// users only ever need to hold the token.
 async function sendFromUser(wallet, to, units) {
   const usdc = usdcOf(wallet);
   const data = usdc.interface.encodeFunctionData("transfer", [to, units]);
@@ -352,6 +371,79 @@ async function openBetsOnPost(tweetId) {
     .in("status", ["placing", "open", "settling"]);
   if (error) throw new Error(error.message);
   return count || 0;
+}
+
+const TRANSFER_TOPIC = keccakId("Transfer(address,address,uint256)");
+const blockTimes = new Map();
+
+async function blockTime(number) {
+  if (!blockTimes.has(number)) {
+    if (blockTimes.size > 500) blockTimes.clear();
+    const block = await provider.getBlock(number);
+    blockTimes.set(number, new Date(Number(block.timestamp) * 1000).toISOString());
+  }
+  return blockTimes.get(number);
+}
+
+// Records token transfers into (deposits) and out of (withdrawals) users' deposit wallets for their
+// history. Transfers to/from the house wallet are skipped: those are stakes and payouts.
+async function trackWalletEvents() {
+  const safe = (await provider.getBlockNumber()) - 2;
+  const state = unwrap(await db().from("bot_state").select("events_block").eq("id", 1).maybeSingle());
+  let from = state?.events_block != null ? Number(state.events_block) : (config.eventsStartBlock ?? safe);
+  if (from > safe) return;
+
+  const accounts =
+    unwrap(await db().from("accounts").select("x_user_id, wallet_address").not("wallet_address", "is", null)) || [];
+  const owners = new Map(accounts.map((row) => [row.wallet_address.toLowerCase(), row.x_user_id]));
+  const topics = [...owners.keys()].map((address) => zeroPadValue(address, 32));
+  const house = houseWallet().address.toLowerCase();
+  const addressOf = (topic) => getAddress(dataSlice(topic, 12)).toLowerCase();
+
+  while (from <= safe) {
+    const to = Math.min(from + config.logChunk - 1, safe);
+    for (let i = 0; i < topics.length; i += 100) {
+      const batch = topics.slice(i, i + 100);
+      const range = { address: config.usdc, fromBlock: from, toBlock: to };
+      const [incoming, outgoing] = await Promise.all([
+        provider.getLogs({ ...range, topics: [TRANSFER_TOPIC, null, batch] }),
+        provider.getLogs({ ...range, topics: [TRANSFER_TOPIC, batch] }),
+      ]);
+      const rows = [];
+      for (const [kind, logs] of [
+        ["deposit", incoming],
+        ["withdrawal", outgoing],
+      ]) {
+        for (const log of logs) {
+          const sender = addressOf(log.topics[1]);
+          const receiver = addressOf(log.topics[2]);
+          const mine = kind === "deposit" ? receiver : sender;
+          const other = kind === "deposit" ? sender : receiver;
+          const xUserId = owners.get(mine);
+          if (!xUserId || other === house) continue;
+          rows.push({
+            tx_hash: log.transactionHash,
+            log_index: log.index,
+            kind,
+            x_user_id: xUserId,
+            amount: formatUnits(BigInt(log.data), config.usdcDecimals),
+            counterparty: other,
+            block_number: log.blockNumber,
+            occurred_at: await blockTime(log.blockNumber),
+          });
+        }
+      }
+      if (rows.length) {
+        unwrap(
+          await db()
+            .from("wallet_events")
+            .upsert(rows, { onConflict: "tx_hash,log_index,kind", ignoreDuplicates: true }),
+        );
+      }
+    }
+    unwrap(await db().from("bot_state").upsert({ id: 1, events_block: to + 1 }));
+    from = to + 1;
+  }
 }
 
 // accounts made on the website get their deposit address here
@@ -412,12 +504,22 @@ function avatarUrl(url) {
   return url ? url.replace("_normal.", "_400x400.") : null;
 }
 
+// Only fields X actually returned are written, so a lookup that didn't ask for the bio or banner
+// (e.g. a mention's author) never blanks what sign-in or the daily refresh saved.
 function profileFields(user) {
-  return {
+  const fields = {
     display_name: user.name || null,
     avatar_url: avatarUrl(user.profile_image_url),
     profile_updated_at: new Date().toISOString(),
   };
+  if (user.description !== undefined) fields.bio = user.description || null;
+  if (user.profile_banner_url !== undefined) fields.banner_url = user.profile_banner_url || null;
+  if (user.verified !== undefined) fields.verified = Boolean(user.verified);
+  if (user.public_metrics) {
+    fields.followers_count = user.public_metrics.followers_count ?? null;
+    fields.following_count = user.public_metrics.following_count ?? null;
+  }
+  return fields;
 }
 
 async function ensureAccount(xUserId, user) {
@@ -595,7 +697,7 @@ async function handleMention({ mention, includes, x, config, creators }) {
   const target = entry * command.leverage;
   if ((await usdcBalance(account.wallet_address)) < command.stake) {
     await x.reply(
-      `balance too low. deposit USDC on Robinhood Chain to ${account.wallet_address}, then reply again`,
+      `balance too low. deposit ${config.tokenSymbol} on Robinhood Chain to ${account.wallet_address}, then reply again`,
       mention.id,
     );
     return;
@@ -741,11 +843,12 @@ async function settleTrade(x, trade, tweet) {
 await loadEnv();
 const config = cfg();
 if (!process.env.WALLET_KEY) throw new Error("WALLET_KEY is required");
+if (!config.usdc) throw new Error(`TOKEN_ADDRESS (the ${config.tokenSymbol} contract) is required`);
 provider = new JsonRpcProvider(config.rpcUrl, config.chainId);
 try {
   config.usdcDecimals = Number(await new Contract(config.usdc, USDC_ABI, provider).decimals());
 } catch (error) {
-  console.error("could not read USDC decimals, using", config.usdcDecimals, error.message);
+  console.error(`could not read ${config.tokenSymbol} decimals, using`, config.usdcDecimals, error.message);
 }
 console.log(`house wallet ${houseWallet().address} (keep ETH here for gas)`);
 const x = createX(config);
@@ -816,3 +919,4 @@ function every(name, ms, fn) {
 console.log(`bot @${config.botUsername} watching ${creators.map((user) => user.username).join(", ")}`);
 every("mentions", config.pollMs, tick);
 every("deposit-addresses", 15000, assignDepositAddresses);
+every("wallet-events", 15000, trackWalletEvents);

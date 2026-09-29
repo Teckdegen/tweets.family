@@ -51,6 +51,12 @@ alter table accounts add column if not exists wallet_address text;
 alter table accounts add column if not exists display_name text;
 alter table accounts add column if not exists avatar_url text;
 alter table accounts add column if not exists profile_updated_at timestamptz;
+-- filled by "Sign in with X" on the website
+alter table accounts add column if not exists banner_url text;
+alter table accounts add column if not exists bio text;
+alter table accounts add column if not exists followers_count int;
+alter table accounts add column if not exists following_count int;
+alter table accounts add column if not exists verified boolean;
 
 alter table bot_state add column if not exists house_wallet_id text;
 alter table bot_state add column if not exists house_wallet_address text;
@@ -82,7 +88,7 @@ create index if not exists leaderboard_pnl_idx on leaderboard (pnl desc);
 create index if not exists trades_won_back_idx on trades (back desc);
 
 -- ─── money ────────────────────────────────────────────────────────────────
--- Users keep USDC in their own deposit wallet (accounts.wallet_address).
+-- Users keep USDG in their own deposit wallet (accounts.wallet_address).
 -- A bet sends the stake straight to the house wallet; wins and refunds are paid back from it.
 -- trades.status: placing -> open -> settling -> won | lost | void   (rejected if the stake transfer failed)
 
@@ -95,6 +101,22 @@ alter table trades add column if not exists risk_fee_rate numeric;
 alter table trades add column if not exists crowd_fee_rate numeric;
 create index if not exists trades_tweet_status_idx on trades (tweet_id, status);
 create index if not exists trades_status_idx on trades (status, expires_at);
+
+-- deposits into / withdrawals out of users' deposit wallets, recorded by the bot from chain logs.
+-- stakes to and payouts from the house wallet are not included (they're bets, see trades).
+create table if not exists wallet_events (
+  tx_hash text not null,
+  log_index int not null,
+  kind text not null check (kind in ('deposit', 'withdrawal')),
+  x_user_id text not null references accounts (x_user_id),
+  amount numeric not null,
+  counterparty text,
+  block_number bigint not null,
+  occurred_at timestamptz not null,
+  primary key (tx_hash, log_index, kind)
+);
+create index if not exists wallet_events_user_idx on wallet_events (x_user_id, occurred_at desc);
+alter table bot_state add column if not exists events_block bigint;
 
 -- numbers behind the bot's /house endpoint
 create or replace function house_stats()
@@ -140,3 +162,4 @@ alter table creators enable row level security;
 alter table bot_state enable row level security;
 alter table seen_mentions enable row level security;
 alter table trades enable row level security;
+alter table wallet_events enable row level security;
