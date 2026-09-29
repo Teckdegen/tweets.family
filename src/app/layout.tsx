@@ -16,8 +16,6 @@ const readexPro = Readex_Pro({
 });
 
 const title = "tweets.cc";
-const description =
-  "Don't bet yes or no. Bet how many X a tweet's engagement goes.";
 const ogImage = {
   url: "/og-image.jpg",
   width: 1280,
@@ -28,10 +26,8 @@ const ogImage = {
 export const metadata: Metadata = {
   metadataBase: new URL("https://tweetsfamily.vercel.app"),
   title,
-  description,
   openGraph: {
     title,
-    description,
     siteName: title,
     url: "/",
     type: "website",
@@ -40,7 +36,6 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title,
-    description,
     images: [ogImage],
   },
 };
