@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import XLogo from "@/components/XLogo";
+import SignInButton from "@/components/SignInButton";
 import { getSessionUserId } from "@/lib/session";
 import { loadAccount } from "@/lib/profile";
 
@@ -33,20 +34,7 @@ export default async function AccountButton() {
           @{account.username}
         </Link>
       ) : (
-        <div className="flex flex-col items-end gap-1.5">
-          {/* a plain <a>: this is a route handler that redirects to X, not a page */}
-          <a
-            href="/api/auth/x/login"
-            className="flex items-center gap-2.5 rounded-full bg-black px-5 py-3 text-[14px] font-semibold text-white shadow-[0_10px_30px_rgba(0,0,0,0.25)] transition hover:bg-[#1a1a1a] active:scale-[0.98]"
-          >
-            <XLogo className="h-4 w-4" />
-            Sign in with X
-          </a>
-          {/* X's off-platform matching rules require opt-in consent to link an X account to other data */}
-          <p className="max-w-[220px] rounded-[12px] bg-black/55 px-3 py-1.5 text-right text-[11px] leading-snug text-white/90 backdrop-blur-md">
-            Signing in links your X account to your tweets.cc wallet.
-          </p>
-        </div>
+        <SignInButton />
       )}
     </div>
   );
