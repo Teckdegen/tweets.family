@@ -15,10 +15,36 @@ const readexPro = Readex_Pro({
   weight: ["300", "400", "500", "600", "700"],
 });
 
+const title = "tweets.cc";
+const description =
+  "Don't bet yes or no. Bet how many X a tweet's engagement goes.";
+const ogImage = {
+  url: "/og-image.jpg",
+  width: 1280,
+  height: 426,
+  alt: "tweets.cc",
+};
+
 export const metadata: Metadata = {
-  title: "tweets.cc",
-  description:
-    "Don't bet yes or no. Bet how many X a tweet's engagement goes.",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://tweets.cc",
+  ),
+  title,
+  description,
+  openGraph: {
+    title,
+    description,
+    siteName: title,
+    url: "/",
+    type: "website",
+    images: [ogImage],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+    images: [ogImage],
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

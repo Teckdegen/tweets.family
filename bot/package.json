@@ -1,0 +1,17 @@
+{
+  "name": "tweets-cc-bot",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node bot.js",
+    "test": "node --check bot.js",
+    "wallet-key": "node -e \"import { randomBytes } from 'node:crypto'; console.log(randomBytes(32).toString('hex'))\""
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.8",
+    "ethers": "^6.17.0"
+  }
+}
