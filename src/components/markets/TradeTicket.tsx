@@ -145,18 +145,7 @@ export default function TradeTicket({
         ))}
       </div>
 
-      <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3.5">
-        <p className="text-[12px] font-semibold tracking-[0.08em] text-white/45 uppercase">Estimated payout</p>
-        <p className="mt-1 text-[28px] leading-none font-semibold tracking-[-0.03em] text-white tabular-nums">
-          {quote ? formatUsdg(quote.back) : "—"}
-          <span className="ml-2 text-[13px] font-semibold text-white/45">USDG</span>
-        </p>
-        <p className="mt-2 text-[12px] leading-relaxed text-white/55">
-          If it hits {target.toLocaleString("en-US")} within {allowed ? minutes : "—"}m at {line}x.
-        </p>
-      </div>
-
-      <dl className="mt-4 space-y-2 text-[14px]">
+      <dl className="mt-5 space-y-2 text-[14px]">
         <Row label="Fee" value={quote ? `${formatUsdg(quote.fee)} · ${formatPct(feeRate)}` : "—"} />
         <Row label="Stake" value={quote ? formatUsdg(quote.stake) : "—"} />
         <Row label="Target" value={target.toLocaleString("en-US")} />
