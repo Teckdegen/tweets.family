@@ -16,5 +16,9 @@ export default async function ProfilePage() {
   // signed in but no account row (e.g. it was deleted): sign in again to recreate it
   if (!profile) redirect("/api/auth/x/login");
 
-  return <ProfileView profile={profile} />;
+  return (
+    <div className="pt-16">
+      <ProfileView profile={profile} />
+    </div>
+  );
 }

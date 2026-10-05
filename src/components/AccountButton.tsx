@@ -5,18 +5,15 @@ import SignInButton from "@/components/SignInButton";
 import { getSessionUserId } from "@/lib/session";
 import { loadAccount } from "@/lib/profile";
 
-// Top-right corner: "Sign in with X" when signed out, the user's X avatar (→ /profile) when signed in.
+// Header, top right: "Sign in" when signed out, the user's X avatar (→ /profile) when signed in.
 export default async function AccountButton() {
   const xUserId = await getSessionUserId();
   const account = xUserId ? await loadAccount(xUserId).catch(() => null) : null;
 
-  return (
-    // above the landing page's pop-up notifications (z-80)
-    <div className="fixed top-4 right-4 z-[90] sm:top-5 sm:right-6">
-      {account ? (
+  return account ? (
         <Link
           href="/profile"
-          className="flex items-center gap-2 rounded-full bg-black/80 py-1.5 pr-4 pl-1.5 text-[14px] font-semibold text-white shadow-[0_10px_30px_rgba(0,0,0,0.25)] backdrop-blur-md transition hover:bg-black"
+          className="flex items-center gap-2 rounded-full bg-white/10 py-1 pr-3 pl-1 text-[14px] font-semibold text-white transition hover:bg-white/15"
         >
           {account.avatar_url ? (
             <Image
@@ -33,9 +30,7 @@ export default async function AccountButton() {
           )}
           @{account.username}
         </Link>
-      ) : (
-        <SignInButton />
-      )}
-    </div>
+  ) : (
+    <SignInButton />
   );
 }

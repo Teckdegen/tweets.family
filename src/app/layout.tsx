@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Manrope, Readex_Pro } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
+import AccountButton from "@/components/AccountButton";
+import SiteHeader from "@/components/SiteHeader";
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -53,7 +55,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
       </head>
       <body className="h-full min-h-full">
-        <Providers>{children}</Providers>
+        <Providers>
+          <div className="flex min-h-full flex-col">
+            <SiteHeader account={<AccountButton />} />
+            <div className="flex-1">{children}</div>
+          </div>
+        </Providers>
       </body>
     </html>
   );

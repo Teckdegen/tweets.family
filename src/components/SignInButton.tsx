@@ -20,15 +20,14 @@ export default function SignInButton() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex items-center gap-2.5 rounded-full bg-black px-5 py-3 text-[14px] font-semibold text-white shadow-[0_10px_30px_rgba(0,0,0,0.25)] transition hover:bg-[#1a1a1a] active:scale-[0.98]"
+        className="rounded-full bg-white px-4 py-2 text-[14px] font-semibold text-[#070d16] transition hover:bg-white/90 active:scale-[0.98]"
       >
-        <XLogo className="h-4 w-4" />
-        Sign in with X
+        Sign in
       </button>
 
       {open ? (
         <div
-          className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center"
+          className="fixed inset-0 z-[200] flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center"
           onClick={() => setOpen(false)}
           role="presentation"
         >

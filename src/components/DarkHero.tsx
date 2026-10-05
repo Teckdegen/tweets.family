@@ -1,6 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useRef } from "react";
+import Link from "next/link";
 import Hero from "@/components/Hero";
 import TradeCompanies from "@/components/TradeCompanies";
 
@@ -149,6 +150,12 @@ export default function DarkHero() {
         </div>
 
         <div ref={overlayRef} className="pointer-events-none absolute inset-0 z-30">
+          <Link
+            href="/markets"
+            className="absolute top-5 right-5 rounded-full bg-white px-5 py-3 text-[14px] font-semibold text-black shadow-[0_10px_30px_rgba(0,0,0,0.28)] transition hover:bg-white/90 active:scale-[0.98] md:right-8"
+          >
+            Launch app
+          </Link>
           <h1 className="hero-title absolute top-[18%] left-4 text-[14vw] font-medium text-white md:left-10 md:text-[13vw]">
             bet
           </h1>
@@ -164,7 +171,7 @@ export default function DarkHero() {
             timeline even wakes up
           </p>
 
-          <div className="absolute top-[14%] right-6 md:right-24">
+          <div className="absolute right-6 md:right-24" style={{ top: "max(7rem, 18%)" }}>
             <div className="flex items-center justify-end gap-3">
               <span className="hidden h-px w-24 rotate-[20deg] bg-white/40 md:block" />
               <span className="text-4xl font-medium tracking-tight text-white md:text-5xl">
