@@ -171,31 +171,7 @@ export default function DarkHero() {
             timeline even wakes up
           </p>
 
-          <div className="absolute right-6 md:right-24" style={{ top: "max(7rem, 18%)" }}>
-            <div className="flex items-center justify-end gap-3">
-              <span className="hidden h-px w-24 rotate-[20deg] bg-white/40 md:block" />
-              <span className="text-4xl font-medium tracking-tight text-white md:text-5xl">
-                +65k
-              </span>
-            </div>
-            <p className="mt-1 text-right text-xs text-white/70 md:text-sm">
-              bets placed
-            </p>
-          </div>
-
           <div className="pointer-events-none absolute right-0 bottom-0 left-0 h-48 bg-gradient-to-b from-transparent to-black" />
-
-          <div className="absolute bottom-20 left-6 md:bottom-24 md:left-20">
-            <div className="flex items-center gap-3">
-              <span className="text-4xl font-medium tracking-tight text-white md:text-5xl">
-                +1.5b
-              </span>
-              <span className="hidden h-px w-24 rotate-[-20deg] bg-white/40 md:block" />
-            </div>
-            <p className="mt-1 text-xs text-white/70 md:text-sm">
-              impressions priced
-            </p>
-          </div>
 
           <div className="absolute right-6 bottom-16 md:right-20 md:bottom-20">
             <div className="flex items-center justify-end gap-3">
