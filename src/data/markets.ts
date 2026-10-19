@@ -22,7 +22,7 @@ export type Market = {
   topic: Topic;
   text: string;
   image?: string;
-  ago: string;
+  postedAt: number;
   entry: number;
   replies: number;
   reposts: number;
@@ -32,12 +32,14 @@ export type Market = {
   trades: BookTrade[];
 };
 
-function parts(total: number) {
-  const replies = Math.round(total * 0.14);
-  const reposts = Math.round(total * 0.18);
-  const quotes = Math.round(total * 0.06);
-  const likes = total - replies - reposts - quotes;
-  return { replies, reposts, likes, quotes };
+export function formatAgo(postedAt: number, now = Date.now()) {
+  const seconds = Math.max(0, Math.floor(now / 1000) - postedAt);
+  if (seconds < 60) return "just now";
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`;
+  const days = Math.floor(seconds / 86400);
+  if (days < 14) return `${days}d`;
+  return `${Math.floor(days / 7)}w`;
 }
 
 function moved(end: number, salt: number) {
@@ -72,22 +74,40 @@ function market(
   id: string,
   influencerId: string,
   text: string,
-  ago: string,
-  entry: number,
+  postedAt: number,
+  counts: { likes: number; replies: number; reposts: number; quotes: number },
   salt: number,
   topic: Topic,
   trades: BookTrade[],
+  previousEntry: number,
+  image?: string,
 ): Market {
-  return { id, influencerId, topic, text, ago, entry, ...parts(entry), series: moved(entry, salt), trades };
+  const entry = counts.likes + counts.replies + counts.reposts + counts.quotes;
+  const scaled = trades.map((trade) => ({
+    ...trade,
+    entry: Math.max(1, Math.round((trade.entry / previousEntry) * entry)),
+  }));
+  return {
+    id,
+    influencerId,
+    topic,
+    text,
+    image,
+    postedAt,
+    entry,
+    ...counts,
+    series: moved(entry, salt),
+    trades: scaled,
+  };
 }
 
 export const MARKETS: Market[] = [
   market(
     "cz-build",
     "cz",
-    "Keep building. The rest is noise.",
-    "14m",
-    18420,
+    "Which other blockchain burns $1.1 billion worth of tokens each quarter?",
+    1792413591,
+    { likes: 1216, replies: 396, reposts: 122, quotes: 47 },
     1.2,
     "Crypto",
     [
@@ -96,13 +116,14 @@ export const MARKETS: Market[] = [
       trade("cz-3", "2026-10-01T15:10:00Z", 80, 4, 30, 17990, "open"),
       trade("cz-4", "2026-10-01T12:22:00Z", 40, 2, 5, 9800, "won"),
     ],
+    18420,
   ),
   market(
     "vlad-simple",
     "vlad",
-    "Markets should feel as simple as sending a message.",
-    "31m",
-    6420,
+    "We took Robinhood public. Then we rebuilt it publicly.\nI wrote about this for @HarvardBiz:\n\nhttps://hbr.org/2026/11/robinhoods-ceo-on-refounding-the-business-post-ipo?giftToken=4309089161791913355139",
+    1792189808,
+    { likes: 1066, replies: 263, reposts: 50, quotes: 37 },
     2.1,
     "Markets",
     [
@@ -111,13 +132,14 @@ export const MARKETS: Market[] = [
       trade("vlad-3", "2026-10-01T15:28:00Z", 25, 5, 5, 6310, "open"),
       trade("vlad-4", "2026-10-01T11:05:00Z", 200, 3, 30, 2900, "won"),
     ],
+    6420,
   ),
   market(
     "elon-curve",
     "elon",
-    "The next step is obvious once you see the curve.",
-    "6m",
-    128400,
+    "Hire Grok @Bot today. You won’t regret it.",
+    1792394965,
+    { likes: 7320, replies: 1113, reposts: 717, quotes: 105 },
     0.4,
     "Tech",
     [
@@ -126,13 +148,14 @@ export const MARKETS: Market[] = [
       trade("elon-3", "2026-10-01T15:48:00Z", 200, 4, 15, 126600, "open"),
       trade("elon-4", "2026-10-01T13:11:00Z", 75, 2, 5, 74000, "won"),
     ],
+    128400,
   ),
   market(
     "ansem-fade",
     "ansem",
-    "this is the part of the chart people fade and then quote a week later",
-    "9m",
-    22110,
+    "i've always viewed social awareness as one of the biggest edges in memecoin trading\n\nbeing early to viral trends matters, but understanding who's behind the attention and how committed the community is can be just as important\n\ni pay close attention to holder distribution, community activity and the social capital of people associated with a coin\n\nthose factors can help explain why certain memes sustain attention while thousands of others fade away",
+    1792383716,
+    { likes: 658, replies: 236, reposts: 76, quotes: 17 },
     3.3,
     "Crypto",
     [
@@ -141,13 +164,15 @@ export const MARKETS: Market[] = [
       trade("ansem-3", "2026-10-01T15:41:00Z", 50, 4, 5, 21880, "open"),
       trade("ansem-4", "2026-10-01T12:58:00Z", 300, 3, 15, 14220, "lost"),
     ],
+    22110,
+    "https://pbs.twimg.com/amplify_video_thumb/2112036366045634560/img/50K4v8exIz8Gt2Jm.jpg",
   ),
   market(
     "ozzy-ship",
     "ozzy",
-    "You are not bullish enough on people who just ship.",
-    "18m",
-    3180,
+    "Almost 50K wallets registered on the new pons web app.\n\nGoing to be doubling down on this 🙏",
+    1792033754,
+    { likes: 502, replies: 93, reposts: 31, quotes: 12 },
     4.2,
     "Crypto",
     [
@@ -156,13 +181,15 @@ export const MARKETS: Market[] = [
       trade("ozzy-3", "2026-10-01T15:36:00Z", 100, 5, 30, 3090, "open"),
       trade("ozzy-4", "2026-10-01T11:40:00Z", 15, 2, 5, 1600, "won"),
     ],
+    3180,
+    "https://pbs.twimg.com/media/HUo-oSRXcAANGxO.png?name=orig",
   ),
   market(
     "vitalik-online",
     "vitalik",
-    "A system that only works when everyone is maximally online is not a system.",
-    "42m",
-    9400,
+    "Ultimately, precompiles and EVM are both the wrong place to put most cryptography support into Ethereum. The reason is that precompiles and EVM both operate on data that has to be included into the ethereum chain somehow, which realistically means included in a block as calldata. That space is limited - even with PeerDAS and blocks-in-blobs, there's a practical cap of ~8 MB/s before it starts getting uncomfortable.\n\nRemember: it's not a blockchain. It's a cryptographic world computer. Any data/computation that does not need to be in the \"main thread\" of data/execution should not be put into the main thread.\n\nInstead, the correct solution is... EIP-8288 maximalism.\n\nIf you have any heavy computation that's self-contained, compute it and STARK it client-side (this is quickly getting faster and faster, even on phones), and push the STARK through the EIP-8288 recursive aggregation mechanism. The chain sees the fact that the computation was done and what the result is; it never needs to see the actual data and computation.\n\nThis way everyone can use whatever cryptography they want, the Ethereum chain can be lean, and we never need to add more precompiles again.",
+    1792382645,
+    { likes: 1255, replies: 246, reposts: 138, quotes: 65 },
     5.5,
     "Tech",
     [
@@ -171,13 +198,14 @@ export const MARKETS: Market[] = [
       trade("vit-3", "2026-10-01T15:22:00Z", 60, 4, 15, 9120, "open"),
       trade("vit-4", "2026-10-01T10:50:00Z", 35, 2, 5, 4400, "won"),
     ],
+    9400,
   ),
   market(
     "brian-freedom",
     "brian",
-    "More economic freedom means more people can just build.",
-    "27m",
-    15770,
+    "The beauty of 24/7 markets is you can react to news at any time.\n\nWhen Elon announces flying cars, traders shouldn’t be stuck on the sidelines waiting for the markets to reopen. Perps and tokenized stocks fix this.",
+    1792351998,
+    { likes: 1002, replies: 183, reposts: 87, quotes: 16 },
     1.8,
     "Markets",
     [
@@ -186,13 +214,14 @@ export const MARKETS: Market[] = [
       trade("brian-3", "2026-10-01T15:33:00Z", 120, 5, 30, 15440, "open"),
       trade("brian-4", "2026-10-01T11:18:00Z", 45, 3, 30, 8600, "won"),
     ],
+    15770,
   ),
   market(
     "mert-infra",
     "mert",
-    "if your rpc falls over the moment the chain gets fun, it was never infrastructure",
-    "11m",
-    11240,
+    "poverty is a mentality",
+    1792152264,
+    { likes: 1172, replies: 93, reposts: 26, quotes: 3 },
     2.7,
     "Infrastructure",
     [
@@ -201,6 +230,8 @@ export const MARKETS: Market[] = [
       trade("mert-3", "2026-10-01T15:44:00Z", 90, 3, 15, 11080, "open"),
       trade("mert-4", "2026-10-01T12:36:00Z", 20, 2, 5, 5400, "won"),
     ],
+    11240,
+    "https://pbs.twimg.com/media/HUwDEHYbgAAZ_sy.jpg?name=orig",
   ),
 ];
 

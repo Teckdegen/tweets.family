@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { Manrope, Readex_Pro } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
@@ -42,7 +43,9 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const cookie = (await headers()).get("cookie");
+
   return (
     <html
       lang="en"
@@ -55,7 +58,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
       </head>
       <body className="h-full min-h-full">
-        <Providers>
+        <Providers cookies={cookie}>
           <div className="flex min-h-full flex-col">
             <SiteHeader account={<AccountButton />} />
             <div className="flex-1">{children}</div>

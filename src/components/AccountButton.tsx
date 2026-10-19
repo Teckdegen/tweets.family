@@ -1,11 +1,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import XLogo from "@/components/XLogo";
-import SignInButton from "@/components/SignInButton";
+import ConnectWalletButton from "@/components/ConnectWalletButton";
 import { getSessionUserId } from "@/lib/session";
 import { loadAccount } from "@/lib/profile";
 
-// Header, top right: "Sign in" when signed out, the user's X avatar (→ /profile) when signed in.
+// Header, top right: connect a wallet when signed out, the user's X avatar (→ /profile) when signed in.
 export default async function AccountButton() {
   const xUserId = await getSessionUserId();
   const account = xUserId ? await loadAccount(xUserId).catch(() => null) : null;
@@ -31,6 +31,6 @@ export default async function AccountButton() {
           @{account.username}
         </Link>
   ) : (
-    <SignInButton />
+    <ConnectWalletButton />
   );
 }

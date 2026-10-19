@@ -42,7 +42,7 @@ export function boardStats(market: Market): BoardStats {
     volume,
     openInterest,
     ending,
-    age: Number.parseInt(market.ago, 10) || 0,
+    age: Math.max(0, Math.floor(Date.now() / 1000) - market.postedAt),
     line,
     left: { line: lead[0], pct: leftPct },
     right: { line: next[0], pct: 100 - leftPct },

@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { Influencer } from "@/data/influencers";
-import { TOPICS, viewBase, type Market } from "@/data/markets";
+import { TOPICS, formatAgo, viewBase, type Market } from "@/data/markets";
 import type { BoardStats } from "@/lib/board";
 import MinuteSlider from "@/components/markets/MinuteSlider";
 import TradeModal from "@/components/markets/TradeModal";
@@ -196,7 +196,7 @@ function MarketCard({ row, spotlight }: { row: Row; spotlight: boolean }) {
         <LiveViews base={viewBase(market)} />
         <span className="ml-auto tabular-nums">{compact(stats.volume)} Vol.</span>
         <span className="mx-2 text-white/20">|</span>
-        <span>{market.ago}</span>
+        <span>{formatAgo(market.postedAt)}</span>
       </div>
       {trading ? (
         <TradeModal

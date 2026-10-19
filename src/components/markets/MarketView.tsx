@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import type { Influencer } from "@/data/influencers";
-import type { BookTrade, Market } from "@/data/markets";
+import { formatAgo, type BookTrade, type Market } from "@/data/markets";
 import EngagementChart from "@/components/markets/EngagementChart";
 import TradeHistory from "@/components/markets/TradeHistory";
 import TradeTicket from "@/components/markets/TradeTicket";
@@ -55,11 +55,16 @@ export default function MarketView({
                   </span>
                 </div>
                 <p className="text-[13px] text-white/50">
-                  @{person.handle} · {market.ago}
+                  @{person.handle} · {formatAgo(market.postedAt)}
                 </p>
               </div>
             </div>
-            <p className="mt-4 text-[18px] leading-snug tracking-[-0.02em]">{market.text}</p>
+            <p className="mt-4 text-[18px] leading-snug tracking-[-0.02em] whitespace-pre-line">{market.text}</p>
+            {market.image ? (
+              <div className="relative mt-4 aspect-[16/9] overflow-hidden rounded-2xl bg-[#1a1a1e]">
+                <Image src={market.image} alt="" fill className="object-cover" sizes="720px" />
+              </div>
+            ) : null}
             <dl className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-white/50">
               <div>
                 <dt className="sr-only">Replies</dt>
